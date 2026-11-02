@@ -1,0 +1,146 @@
+# Run with the VS Code REST Client extension while geth: local dev node is running.
+# Send requests individually, in order. Continue the debugger when it pauses.
+# Retry receipt requests if result is null or transaction indexing is in progress.
+@rpc = http://127.0.0.1:8545
+@account = 0x71562b71999873db5b286df957af199ec94617f7
+# Replace recipient with another address you control to fund it.
+@recipient = 0x71562b71999873db5b286df957af199ec94617f7
+
+### 1. List unlocked developer accounts
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "eth_accounts",
+  "params": []
+}
+
+### 2. Get funded account balance (hexadecimal wei)
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "eth_getBalance",
+  "params": ["{{account}}", "latest"]
+}
+
+### 3. Deploy contract: runtime writes 42 into storage slot zero on every call
+# @name deploy
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "eth_sendTransaction",
+  "params": [{
+    "from": "{{account}}",
+    "gas": "0x30d40",
+    "data": "0x6006600c60003960066000f3602a60005500"
+  }]
+}
+
+### 4. Get deployment receipt; wait for status 0x1 and contractAddress
+# @name deploymentReceipt
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "eth_getTransactionReceipt",
+  "params": ["{{deploy.response.body.$.result}}"]
+}
+
+### 5. Check deployed runtime code (expected 0x602a60005500)
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "eth_getCode",
+  "params": ["{{deploymentReceipt.response.body.$.result.contractAddress}}", "latest"]
+}
+
+### 6. Execute contract; set EVM breakpoints before sending
+# @name execute
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "eth_sendTransaction",
+  "params": [{
+    "from": "{{account}}",
+    "to": "{{deploymentReceipt.response.body.$.result.contractAddress}}",
+    "gas": "0x186a0",
+    "data": "0x"
+  }]
+}
+
+### 7. Get execution receipt (expected status 0x1)
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "eth_getTransactionReceipt",
+  "params": ["{{execute.response.body.$.result}}"]
+}
+
+### 8. Read storage slot zero (expected 32-byte value ending in 002a = 42)
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "eth_getStorageAt",
+  "params": ["{{deploymentReceipt.response.body.$.result.contractAddress}}", "0x0", "latest"]
+}
+
+### 9. Transfer 10 native coins; set recipient above first (defaults to self)
+# @name transfer
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 9,
+  "method": "eth_sendTransaction",
+  "params": [{
+    "from": "{{account}}",
+    "to": "{{recipient}}",
+    "value": "0x8ac7230489e80000",
+    "gas": "0x5208"
+  }]
+}
+
+### 10. Get transfer receipt
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "method": "eth_getTransactionReceipt",
+  "params": ["{{transfer.response.body.$.result}}"]
+}
+
+### 11. Get recipient balance
+POST {{rpc}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 11,
+  "method": "eth_getBalance",
+  "params": ["{{recipient}}", "latest"]
+}

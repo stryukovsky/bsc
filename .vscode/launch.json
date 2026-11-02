@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "geth: local dev node",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/geth",
+            "cwd": "${workspaceFolder}",
+            "output": "/tmp/bsc-geth-vscode-debug",
+            "args": [
+                "--dev",
+                "--dev.period", "0",
+                "--datadir", "/tmp/bsc-vscode-dev",
+                "--http",
+                "--http.addr", "127.0.0.1",
+                "--http.port", "8545",
+                "--http.api", "eth,net,web3,debug",
+                "--ipcdisable"
+            ]
+        }
+    ]
+}

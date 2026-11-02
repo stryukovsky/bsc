@@ -40,7 +40,6 @@ profile.cov
 *.iml
 
 # VS Code
-.vscode
 
 cmd/geth/node/
 cmd/geth/__debug_bin

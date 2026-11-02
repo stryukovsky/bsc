@@ -1,0 +1,50 @@
+/home/dmitry/Work/bsc
+Transaction lifecycle: submission, block inclusion, execution, and receipt
+internal/ethapi/api.go:2414
+Start with eth_sendRawTransaction: the client supplies an already signed transaction, including its nonce, destination, value, gas settings, and calldata. SendRawTransaction decodes the bytes and rejects malformed input, then calls SubmitTransaction. Signing happens before this RPC call.
+internal/ethapi/api.go:2315
+SubmitTransaction checks the RPC fee cap and replay-protection policy, then calls the backend's SendTx. It returns the transaction hash on success. This acknowledges submission; it does not guarantee block inclusion or successful execution.
+eth/api_backend.go:346
+SendTx submits the transaction to the local pool. If the local transaction tracker is enabled, temporary pool rejection can still produce a successful RPC response: the tracker retains the transaction for later resubmission. Permanent rejection is returned to the caller.
+core/txpool/txpool.go:318
+The pool routes transactions into the appropriate subpool according to transaction type, then returns each transaction's admission error. Follow the legacy pool for an ordinary transfer or contract call; blob transactions use a separate pool.
+core/txpool/legacypool/legacypool.go:583
+The legacy pool validates the transaction against pool rules and the current chain state. Admission checks transaction validity and affordability without executing its contract code. A transaction can pass admission and later become unusable because the chain state changes.
+core/txpool/legacypool/legacypool.go:1427
+Promotion moves eligible queued transactions into the executable pending set. Sender nonces impose ordering: a transaction with a nonce gap must wait for earlier transactions. Pool acceptance alone therefore does not mean a validator can include it immediately.
+eth/handler.go:1027
+The transaction broadcast loop forwards pool events to BroadcastTransactions, which propagates transactions to connected peers. This lets a transaction submitted to an RPC node reach a block-producing validator. Propagation and selection are asynchronous.
+miner/worker.go:1140
+On the producing validator, fillTransactions reads pending transactions with fee and fork-dependent filters. The worker chooses candidates subject to ordering, block capacity, and this repository's lane rules. A valid transaction may remain pending if it is not selected.
+miner/worker.go:827
+The producer executes each candidate against the developing block state through core.ApplyTransaction. It snapshots state and the gas pool first, restoring both if application returns an error. Execution happens while constructing the block, before the finished block is sealed.
+core/state_processor.go:328
+ApplyTransaction recovers the sender and converts the signed transaction into an execution Message using the block's signer and base fee. It delegates to ApplyTransactionWithEVM, the shared execution path used during production and block validation.
+core/state_processor.go:243
+ApplyTransactionWithEVM calls ApplyMessage, finalizes transaction state changes, and constructs a receipt. A returned application error means the transaction cannot be applied in this block context. An EVM failure such as REVERT can instead produce a valid receipt with failed status.
+core/state_transition.go:541
+The state transition checks nonce, funds, fees, intrinsic gas, and other active fork rules. It buys gas and dispatches either contract creation or a call. Ordinary calls increment the sender nonce before entering the EVM. Gas refunds and fee accounting follow execution; BSC directs transaction fee rewards through consensus.SystemAddress.
+core/vm/evm.go:299
+EVM.Call transfers value and executes destination code or a precompile; an ordinary account transfer needs no contract bytecode. Execution errors revert changes within the call's snapshot, including its logs. A reverted transaction still consumes gas and its sender nonce, so failed execution can remain included in a valid block.
+core/state_processor.go:287
+MakeReceipt records success or failure, gas used, cumulative block gas, transaction hash, logs, and block-position metadata. Contract creation also records the derived address. Receipt processors supply additional processing such as bloom generation. The receipt is execution output, not something submitted by the sender.
+miner/worker.go:780
+After application succeeds, commitTransaction appends both the transaction and its receipt to the candidate environment. A receipt with status 0 is still appended: failure inside the EVM differs from an application error that excludes the candidate.
+miner/worker.go:1659
+commit assembles the executed transactions, receipts, and resulting state into a block through core.AssembleBlock. Consensus finalization can add BSC system transactions and associated receipts, so the final block includes work beyond the user transaction selection loop.
+core/types/block.go:305
+Block construction derives the transaction root and receipt root and builds the logs bloom. The header commits to receipt contents through receiptsRoot; full receipt objects are not carried as part of the ordinary block transaction body.
+consensus/parlia/parlia.go:1755
+Parlia seals the assembled block using the validator's consensus signing path. The transaction is now part of a proposed signed block, but proposal alone does not establish durable canonical inclusion or finality.
+miner/worker.go:680
+For the normal locally produced block path, the worker passes the sealed block, receipts, logs, and already executed state to WriteBlockAndSetHead. This reuses the producer's execution results. The worker also has a separate bid-block verification path.
+core/blockchain.go:2735
+When importing a block through the normal execution path, a receiving node runs StateProcessor.Process against the parent state. This is an alternative to the producer's construction path: every receiving node independently derives execution results rather than trusting receipts supplied by the producer.
+core/state_processor.go:71
+Process executes ordinary transactions in block order, so each sees earlier transactions' state changes. It collects their receipts and handles BSC system transactions through consensus finalization. An invalid ordinary transaction aborts processing; a valid transaction whose EVM execution fails contributes a failed receipt.
+core/blockchain.go:2747
+ValidateState checks the independently computed result against the block header, including gas usage, receipt bloom, receipt root, and state root. A mismatch rejects the block. These checks connect the advertised block commitments to actual execution.
+core/blockchain.go:1963
+writeBlockWithState writes the block and receipts into the database and commits resulting state through the state-storage path. Receipts are stored by block hash and number. Storage also occurs for noncanonical blocks, so stored receipts alone do not establish canonical inclusion.
+internal/ethapi/api.go:2212
+Finally, eth_getTransactionReceipt resolves the transaction's canonical block and index, retrieves its receipt, and marshals the RPC response. Pending or unknown transactions return null once indexing is complete; incomplete indexing can return an indexing error. The response includes status, gas, logs, and block identity. A receipt establishes current canonical inclusion, while later reorganization can change that result; finality requires a separate check

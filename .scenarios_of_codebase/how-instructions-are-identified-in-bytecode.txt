@@ -1,0 +1,34 @@
+/home/dmitry/Work/bsc
+How instructions are identified in bytecode
+core/vm/opcodes.go:24
+An EVM opcode is one byte: OpCode is a byte type, and constants assign numeric values such as STOP = 0x00, ADD = 0x01, and PUSH1 = 0x60. Bytecode stores these numbers rather than Go function names or textual mnemonics. For example, 60 02 60 03 01 00 means PUSH1 2, PUSH1 3, ADD, STOP; the 02 and 03 bytes are operands because they follow PUSH1.
+core/vm/evm.go:189
+EVM construction selects the instruction table using the active chain fork rules. Later forks extend or change earlier instruction sets, so whether a byte is supported, its handler, and its gas rules depend on this table. Configured ExtraEips can modify a private copy of the selected table; failed activations are logged and omitted from the retained ExtraEips configuration.
+core/vm/jump_table.go:32
+Each operation bundles an execute function with constant and optional dynamic gas costs, stack limits, and an optional memory-size calculation. JumpTable is a 256-entry array indexed by opcode byte. This is an opcode dispatch table, distinct from bytecode JUMP destinations.
+core/vm/jump_table.go:293
+The ADD slot binds numeric opcode 0x01 to opAdd and declares its gas cost and stack requirements: two input words become one output word. This binding is the missing link between a byte in contract code and the Go implementation in instructions.go. Other slots similarly bind PUSH1, STOP, and the rest of the instruction set.
+core/vm/interpreter.go:115
+Run returns immediately for empty code. Otherwise it creates the execution scope containing memory, stack, and contract, captures evm.table, and initializes the byte-offset program counter pc to zero. Instruction identification happens incrementally during execution; this loop does not first decode the whole bytecode into instruction objects.
+core/vm/contract.go:130
+GetOp(pc) reads Contract.Code[pc] and casts that byte to OpCode. This cast does not validate whether the opcode is supported or check whether the offset is PUSH data. When pc is outside the code, GetOp returns STOP, allowing execution that falls off the end to halt normally.
+core/vm/interpreter.go:189
+The interpreter fetches op = contract.GetOp(pc), then selects operation = jumpTable[op]. This direct array lookup identifies the implementation without a switch over function names. Before invoking it, the interpreter checks the operation's stack limits and charges constant gas; failure returns ErrStackUnderflow, ErrStackOverflow, or ErrOutOfGas before the handler executes.
+core/vm/interpreter.go:206
+For operations with dynamic gas, the interpreter calculates required memory size, detects size overflow, computes and charges dynamic gas, and expands memory after tracing. Errors can stop execution before the handler: memory arithmetic may return ErrGasUintOverflow, while dynamic gas calculation failures are wrapped as ErrOutOfGas. Tracing hooks can observe the opcode, pc, cost, and execution scope.
+core/vm/interpreter.go:254
+operation.execute(&pc, evm, callContext) invokes the chosen handler. The handler can mutate stack, memory, contract state, and pc as appropriate. A non-nil error breaks the loop; otherwise pc increases by one before the next fetch. The internal errStopToken is cleared on exit, so STOP is successful termination rather than an exposed execution error.
+core/vm/instructions.go:1110
+opPush1 advances pc to the following byte and pushes that byte as a number; if the byte is missing it pushes zero. The interpreter's subsequent pc++ moves to the next opcode. In 60 02 60 03 01 00, opcode offsets are therefore 0, 2, 4, and 5: operand bytes at offsets 1 and 3 are never dispatched.
+core/vm/instructions.go:1142
+makePush builds handlers for larger PUSH instructions. They read the specified number of immediate bytes, treat them as a big-endian value, right-pad missing trailing bytes with zeros, and advance pc over the operand region. opPush2 is a specialized equivalent for two bytes. Correct pc advancement is what separates embedded data from the next instruction during sequential execution.
+core/vm/instructions.go:29
+opAdd is reached only after opcode lookup and pre-execution checks. It pops the top stack word, accesses the next word, and replaces that word with their 256-bit modular sum. In the example, the two PUSH1 handlers leave 2 and 3 on the stack, ADD leaves 5, and the next byte is STOP. opAdd does not decode the bytecode itself.
+core/vm/instructions.go:532
+JUMP changes pc to destination minus one so the interpreter's increment lands exactly on the target; JUMPI does this only when its condition is nonzero. Invalid destinations return ErrInvalidJump. These handlers explain why execution need not visit instructions in increasing byte-offset order.
+core/vm/contract.go:75
+validJumpdest requires an in-range destination whose byte equals JUMPDEST and whose offset is actual code. isCode uses a cached bytecode bitmap to exclude PUSH operand regions. A 0x5b byte embedded in PUSH data is therefore not a valid jump target, even though its numeric value matches JUMPDEST.
+core/vm/jump_table.go:1094
+Every unassigned opcode slot is filled with opUndefined, so an unknown or not-yet-enabled byte has an executable error handler rather than a nil table entry. The explicit INVALID opcode also maps to opUndefined. Support is determined by the active table, not merely by whether an opcode constant or handler exists in the source tree.
+core/vm/instructions.go:878
+opUndefined returns ErrInvalidOpCode containing the offending byte, which stops the interpreter. opStop instead returns errStopToken, which the interpreter converts to success. For the example bytecode, STOP leaves the computed 5 on the internal stack but returns no output bytes; returning that value to the caller would additionally require storing it in memory and executing RETURN.
