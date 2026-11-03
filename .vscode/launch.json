@@ -2,6 +2,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "core/vm: TestCAS20TokenDispatch",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/core/vm",
+            "cwd": "${workspaceFolder}/core/vm",
+            "args": ["-test.run", "^TestCAS20TokenDispatch$", "-test.v"]
+        },
+        {
             "name": "geth: local dev node",
             "type": "go",
             "request": "launch",
