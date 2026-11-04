@@ -1,0 +1,248 @@
+[
+  {
+    "type": "function",
+    "name": "createCAS20",
+    "inputs": [
+      {
+        "name": "variant",
+        "type": "uint8"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32"
+      },
+      {
+        "name": "params",
+        "type": "bytes"
+      },
+      {
+        "name": "initCalls",
+        "type": "bytes[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getCAS20Address",
+    "inputs": [
+      {
+        "name": "variant",
+        "type": "uint8"
+      },
+      {
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isCAS20",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "variantOf",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isCAS20Initialized",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "CAS20Created",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "variant",
+        "type": "uint8",
+        "indexed": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "indexed": false
+      },
+      {
+        "name": "decimals",
+        "type": "uint8",
+        "indexed": false
+      },
+      {
+        "name": "params",
+        "type": "bytes",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "DelegateCallNotAllowed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FeatureNotActivated",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InitCallFailed",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InternalCallMalformed",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidCurrency",
+    "inputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidDecimals",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidVariant",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MissingRequiredField",
+    "inputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "NonPayable",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StaticCallNotAllowed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TokenAlreadyExists",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "UnsupportedVersion",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ]
+  }
+]
