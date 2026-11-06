@@ -28,6 +28,25 @@
                 "--http.api", "eth,net,web3,debug",
                 "--ipcdisable"
             ]
+        },
+        {
+            "name": "geth: local CAS20 dev node",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/geth",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--dev",
+                "--dev.cas20",
+                "--dev.period", "0",
+                "--datadir", "/tmp/bsc-vscode-cas20-dev",
+                "--http",
+                "--http.addr", "127.0.0.1",
+                "--http.port", "8545",
+                "--http.api", "eth,net,web3,debug",
+                "--ipcdisable"
+            ]
         }
     ]
 }

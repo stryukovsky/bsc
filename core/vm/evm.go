@@ -58,12 +58,10 @@ func (evm *EVM) precompile(addr common.Address) (PrecompiledContract, bool) {
 	return nil, false
 }
 
-// cas20Enabled gates the family on Jenner (BEP-706). IsJenner embeds the IsInBSC
-// gate, so no separate check is needed: a non-BSC config that set jennerTime would
-// still not route the reserved address space, and its registries would never be
-// seeded either.
+// cas20Enabled gates production chains on Jenner. DevCAS20 is an explicit
+// opt-in for the isolated --dev chain, which uses Ethereum consensus.
 func (evm *EVM) cas20Enabled() bool {
-	return evm.chainRules.IsJenner
+	return evm.chainRules.IsJenner || evm.chainConfig.DevCAS20
 }
 
 // runPrecompile dispatches a resolved precompile, routing stateful precompiles

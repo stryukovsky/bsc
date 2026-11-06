@@ -44,6 +44,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/txpool/blobpool"
 	"github.com/ethereum/go-ethereum/core/txpool/legacypool"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/kzg4844"
@@ -173,6 +174,11 @@ var (
 	DeveloperFlag = &cli.BoolFlag{
 		Name:     "dev",
 		Usage:    "Ephemeral proof-of-authority network with a pre-funded developer account, mining enabled",
+		Category: flags.DevCategory,
+	}
+	DeveloperCAS20Flag = &cli.BoolFlag{
+		Name:     "dev.cas20",
+		Usage:    "Enable CAS20 Asset and fund the first Anvil account on an isolated --dev chain",
 		Category: flags.DevCategory,
 	}
 	DeveloperPeriodFlag = &cli.Uint64Flag{
@@ -2117,6 +2123,9 @@ func setRequiredBlocks(ctx *cli.Context, cfg *ethconfig.Config) {
 
 // SetEthConfig applies eth-related command line flags to the config.
 func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
+	if ctx.Bool(DeveloperCAS20Flag.Name) && !ctx.Bool(DeveloperFlag.Name) {
+		Fatalf("--dev.cas20 requires --dev")
+	}
 	// Avoid conflicting network flags
 	flags.CheckExclusive(ctx, BSCMainnetFlag, DeveloperFlag, OverrideGenesisFlag)
 	flags.CheckExclusive(ctx, DeveloperFlag, ExternalSignerFlag) // Can't use both ephemeral unlocked and external signer
@@ -2446,6 +2455,15 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 		// configure default developer genesis which will be used unless a
 		// datadir is specified and a chain is preexisting at that location.
 		cfg.Genesis = core.DeveloperGenesisBlock(ctx.Uint64(DeveloperGasLimitFlag.Name), &developer.Address)
+		if ctx.Bool(DeveloperCAS20Flag.Name) {
+			// Public Anvil test account; never use this key outside local development.
+			anvil := common.HexToAddress("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
+			cfg.Genesis.Config.DevCAS20 = true
+			cfg.Genesis.Alloc[anvil] = types.Account{Balance: new(big.Int).Mul(big.NewInt(10_000), big.NewInt(params.Ether))}
+			for address, account := range vm.DeveloperCAS20Alloc(anvil) {
+				cfg.Genesis.Alloc[address] = account
+			}
+		}
 
 		// If a datadir is specified, ensure that any preexisting chain in that location
 		// has a configuration that is compatible with dev mode: it must be merged at genesis.
@@ -2466,6 +2484,9 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 				genesis, err := core.ReadGenesis(chaindb)
 				if err != nil {
 					Fatalf("Could not read genesis from database: %v", err)
+				}
+				if genesis.Config.DevCAS20 != ctx.Bool(DeveloperCAS20Flag.Name) {
+					Fatalf("Developer CAS20 setting differs from the existing genesis; use a fresh --datadir")
 				}
 				if genesis.Config.TerminalTotalDifficulty == nil {
 					Fatalf("Bad developer-mode genesis configuration: terminalTotalDifficulty must be specified")

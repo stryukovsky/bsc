@@ -3,6 +3,7 @@ package vm
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/tracing"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -21,4 +22,20 @@ func seedCAS20Sentinel(state StateDB, addr common.Address) {
 		return
 	}
 	state.SetCode(addr, CAS20MarkerCode, tracing.CodeChangeSystemContractUpgrade)
+}
+
+// DeveloperCAS20Alloc seeds the isolated developer chain with an activation
+// admin and the Asset feature enabled. Production activation uses governance.
+func DeveloperCAS20Alloc(admin common.Address) types.GenesisAlloc {
+	return types.GenesisAlloc{
+		CAS20ActivationRegistryAddress: {
+			Balance: common.Big0,
+			Code:    CAS20MarkerCode,
+			Storage: map[common.Hash]common.Hash{
+				actSlot(actSlotAdmin): addrKey(admin),
+				mappingSlot(actSlot(actSlotFeatures), featureCAS20Asset): common.HexToHash("0x1"),
+			},
+		},
+		CAS20PolicyRegistryAddress: {Balance: common.Big0, Code: CAS20MarkerCode},
+	}
 }

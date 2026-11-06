@@ -164,6 +164,7 @@ var (
 		utils.NodeKeyHexFlag,
 		utils.DNSDiscoveryFlag,
 		utils.DeveloperFlag,
+		utils.DeveloperCAS20Flag,
 		utils.DeveloperGasLimitFlag,
 		utils.DeveloperPeriodFlag,
 		utils.VMEnableDebugFlag,

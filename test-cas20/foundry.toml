@@ -3,11 +3,11 @@ src = "src"
 out = "out"
 libs = ["lib"]
 
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
 [profile.localdev]
 eth_rpc_url = "bsc_localdev"
 eth_rpc_no_proxy = true
 
 [rpc_endpoints]
 bsc_localdev = "http://127.0.0.1:8545"
-
-# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
