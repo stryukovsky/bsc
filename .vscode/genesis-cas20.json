@@ -1,0 +1,88 @@
+{
+    "config": {
+        "chainId": 1337,
+        "homesteadBlock": 0,
+        "eip150Block": 0,
+        "eip155Block": 0,
+        "eip158Block": 0,
+        "byzantiumBlock": 0,
+        "constantinopleBlock": 0,
+        "petersburgBlock": 0,
+        "istanbulBlock": 0,
+        "muirGlacierBlock": 0,
+        "ramanujanBlock": 0,
+        "nielsBlock": 0,
+        "mirrorSyncBlock": 0,
+        "brunoBlock": 0,
+        "eulerBlock": 0,
+        "nanoBlock": 0,
+        "moranBlock": 0,
+        "gibbsBlock": 0,
+        "planckBlock": 0,
+        "lubanBlock": 0,
+        "platoBlock": 0,
+        "berlinBlock": 0,
+        "londonBlock": 0,
+        "hertzBlock": 0,
+        "hertzfixBlock": 0,
+        "shanghaiTime": 0,
+        "keplerTime": 0,
+        "feynmanTime": 0,
+        "feynmanFixTime": 0,
+        "cancunTime": 0,
+        "haberTime": 0,
+        "haberFixTime": 0,
+        "bohrTime": 0,
+        "pascalTime": 0,
+        "pragueTime": 0,
+        "lorentzTime": 0,
+        "maxwellTime": 0,
+        "fermiTime": 0,
+        "osakaTime": 0,
+        "mendelTime": 0,
+        "pasteurTime": 0,
+        "jennerTime": 0,
+        "parlia": {},
+        "blobSchedule": {
+            "cancun": {
+                "target": 3,
+                "max": 6,
+                "baseFeeUpdateFraction": 3338477
+            },
+            "prague": {
+                "target": 3,
+                "max": 6,
+                "baseFeeUpdateFraction": 3338477
+            },
+            "osaka": {
+                "target": 3,
+                "max": 6,
+                "baseFeeUpdateFraction": 3338477
+            }
+        }
+    },
+    "timestamp": "0x0",
+    "gasLimit": "0x2625a00",
+    "difficulty": "0x1",
+    "extraData": "0x00000000000000000000000000000000000000000000000000000000000000000171562b71999873db5b286df957af199ec94617f7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "alloc": {
+        "1804c8ab1f12e6bbf3894d4083f33e07309d1f38": {
+            "balance": "1000000000000000000000000"
+        },
+        "71562b71999873db5b286df957af199ec94617f7": {
+            "balance": "1000000000000000000000000"
+        },
+        "7020000000000000000000000000000000000001": {
+            "balance": "0x0",
+            "code": "0xef",
+            "storage": {
+                "0x3b730326c8d88f8bce48c14553ae70b99f2e356a87dc263cd777aad7d7255341": "0x0000000000000000000000000000000000000000000000000000000000000001",
+                "0xa8970030726ea4c1e5fe64bf3ba11683da0b59f818265a7369e5570e9fc0bd01": "0x00000000000000000000000071562b71999873db5b286df957af199ec94617f7"
+            }
+        },
+        "7020000000000000000000000000000000000002": {
+            "balance": "0x0",
+            "code": "0xef"
+        }
+    }
+}
